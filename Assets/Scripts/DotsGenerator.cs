@@ -3,11 +3,13 @@ using System.Collections.Generic;
 
 public class DotGenerator : MonoBehaviour
 {
-    [Header("生成区域尺寸（单位：米）")]
+    public GameObject cam;
+
+    [Space(15)]
     public float areaHeight;   // Y轴范围
     public float areaDepth;    // Z轴范围
 
-    [Header("Dot 设置")]
+    [Space(15)]
     public int seed = 0; 
     public float dotRadius;
     public float dotDensity;

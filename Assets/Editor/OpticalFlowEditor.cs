@@ -1,9 +1,9 @@
 ﻿using UnityEngine;
 using UnityEditor;
 
-// 自定义编辑器，用于在Inspector中可视化OpticalFlow组件的运动曲线
-[CustomEditor(typeof(OpticalFlow))]
-public class OpticalFlowEditor : Editor
+// 自定义编辑器，用于在Inspector中可视化CameraController组件的运动曲线
+[CustomEditor(typeof(CameraController))]
+public class CameraControllerEditor : Editor
 {
     const int SAMPLE_COUNT = 400; // 曲线采样点数量
 
@@ -12,7 +12,7 @@ public class OpticalFlowEditor : Editor
         // 绘制默认Inspector
         DrawDefaultInspector();
 
-        OpticalFlow of = (OpticalFlow)target;
+        CameraController of = (CameraController)target;
 
         GUILayout.Space(15);
         GUILayout.Label("Motion Curve", EditorStyles.boldLabel); // 显示曲线标题
@@ -65,7 +65,7 @@ public class OpticalFlowEditor : Editor
     }
 
     // 根据时间 t 和当前运动模式计算曲线的 y 值
-    float GetCurveY(float t, OpticalFlow of)
+    float GetCurveY(float t, CameraController of)
     {
         // 如果不在播放模式，返回0（不显示曲线）
         if (!Application.isPlaying)
@@ -74,17 +74,17 @@ public class OpticalFlowEditor : Editor
         //float modT = t % 2f; // 对周期 2 取模，确保周期性
         float modT = ((t % 2f) + 2f) % 2f;
 
-        switch (of.motionType)
+        switch (of.motionOption)
         {
-            case OpticalFlow.MotionType.Linear:
+            case CameraController.MotionOption.Linear:
                 // 线性运动：y = 1 - |t - 1|，构成一个对称三角波
                 return 1f - Mathf.Abs(modT - 1f);
 
-            case OpticalFlow.MotionType.EaseInOut:
+            case CameraController.MotionOption.Cos:
                 // 缓入缓出：使用余弦函数构造平滑过渡
                 return (1f - Mathf.Cos(Mathf.PI * t)) / 2f;
 
-            case OpticalFlow.MotionType.EaseOutIn:
+            case CameraController.MotionOption.ArcCos:
                 // 缓出缓入：分段 acos 实现两段平滑过渡（对称波形）
                 if (modT <= 1f)
                     return Mathf.Acos(-2f * modT + 1f) / Mathf.PI;
