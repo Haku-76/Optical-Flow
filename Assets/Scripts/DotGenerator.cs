@@ -18,7 +18,6 @@ public class DotGenerator : MonoBehaviour
 
     void Start()
     {
-        //CreateBackground(); // 新增：先生成黑色背景
         GenerateDots();
     }
 
@@ -58,35 +57,6 @@ public class DotGenerator : MonoBehaviour
         }
 
         Debug.Log($"{dotPositions.Count} 个 dot 已生成。");
-    }
-
-    void CreateBackground()
-    {
-        // 创建平面
-        GameObject bg = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        bg.transform.parent = this.transform;
-
-        // 平面中心与DotGenerator一致，略往z负方向偏移，避免跟dot重叠
-        bg.transform.position = transform.position + new Vector3(0, 0, -dotRadius);
-
-        // Unity默认Plane是XZ平面，旋转到XY平面
-        bg.transform.localRotation = Quaternion.Euler(270f, 0, 0);
-
-        // 默认Plane大小为10x10，缩放到 areaWidth/areaHeight
-        float scaleX = areaWidth / 10f;
-        float scaleY = areaHeight / 10f;
-        bg.transform.localScale = new Vector3(scaleX, scaleY, 1); // 缩放Y轴就是对应原来的Z
-
-        // 设置黑色无光材质
-        var renderer = bg.GetComponent<Renderer>();
-        if (renderer != null)
-        {
-            Material mat = new Material(Shader.Find("Unlit/Color"));
-            mat.color = Color.black;
-            renderer.material = mat;
-            renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            renderer.receiveShadows = false;
-        }
     }
 
     void CreateDot(Vector3 position)
