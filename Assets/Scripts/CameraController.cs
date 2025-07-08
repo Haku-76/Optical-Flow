@@ -43,14 +43,14 @@ public class CameraController : MonoBehaviour
     public Vector3 centerPos;
     public Vector3 leftLimit;
     public Vector3 rightLimit;
-    public Vector3 moveDir; // 新增，运动方向
+    public Vector3 moveDir;
 
     [Header("Capture Mode")]
     public bool captureModeOn = false;
     public string folder;
-    public int index = 0;             // 当前总帧数
-    public int cycleFrameCount = 120; // 一个完整循环的帧数
-    public int endFrameIndex = 240;   // 总采集帧数
+    public int index = 0;             // current total frame
+    public int cycleFrameCount = 120; // frame count per loop
+    public int endFrameIndex = 240;   // total frame count
 
     [Header("Animation Mode")]
     public float elapsedTime = 0f;
@@ -68,7 +68,7 @@ public class CameraController : MonoBehaviour
         camLeft.transform.position = leftLimit;
         camRight.transform.position = rightLimit;
 
-        folder = Path.Combine("Screenshots", motionOption.ToString());
+        folder = Path.Combine("Screenshots", motionOption.ToString(), presentationOption.ToString());
         if (!Directory.Exists(folder))
         {
             Directory.CreateDirectory(folder);
@@ -77,8 +77,32 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        //amplitude = serialReader.value;
+        amplitude = (serialReader != null && serialReader.enabled) ? serialReader.value : 1.0f;
 
+        switch (presentationOption)
+        {
+            case PresentationOption.Continuity:
+                SetActiveCameras(true, false, false);
+                SetActiveImages(true, false, false);
+                HandleMode(continuity: true);
+                break;
+
+            case PresentationOption.LuminanceMixing:
+                SetActiveCameras(false, true, true);
+                SetActiveImages(false, true, true);
+                HandleMode(luminanceMixing: true);
+                break;
+
+            case PresentationOption.Stillness:
+                SetActiveCameras(true, true, true);
+                SetActiveImages(true, true, true);
+                HandleMode(stillness: true);
+                break;
+        }
+    }
+
+    void HandleMode(bool continuity = false, bool luminanceMixing = false, bool stillness = false)
+    {
         if (captureModeOn)
         {
             if (index >= endFrameIndex)
@@ -96,23 +120,17 @@ public class CameraController : MonoBehaviour
             Vector3 pos = leftLimit + moveDir * (distance * ease);
             camMain.transform.position = pos;
 
-            string path = Path.Combine(folder, $"{motionOption}_{(index + 1):D3}.png");
-            ScreenCapture.CaptureScreenshot(path);
+            // Update ratio and image alpha as needed
+            UpdatePresentationEffect(ease, luminanceMixing, stillness);
 
+            string path = Path.Combine(folder, $"{motionOption}_{presentationOption}_{(index + 1):D3}.png");
+            ScreenCapture.CaptureScreenshot(path);
             index++;
         }
-
-        else if (presentationOption == PresentationOption.Continuity)
+        else
         {
-            camMain.GetComponent<Camera>().enabled = true;
-            camLeft.GetComponent<Camera>().enabled = false;
-            camRight.GetComponent<Camera>().enabled = false;
-            ImageLeft.SetActive(true);
-            ImageLeft.SetActive(false);
-            ImageRight.SetActive(false);
-
             elapsedTime += Time.deltaTime * speed;
-            int currentLoopPhase = Mathf.FloorToInt(elapsedTime / 2f);  // Full cycle: 2 seconds
+            int currentLoopPhase = Mathf.FloorToInt(elapsedTime / 2f); // Full cycle: 2 seconds
             if (currentLoopPhase > previousLoopPhase)
             {
                 loopCount++;
@@ -123,84 +141,61 @@ public class CameraController : MonoBehaviour
             float ease = CalculatePos(t);
             Vector3 pos = leftLimit + moveDir * (distance * ease);
             camMain.transform.position = pos;
+
+            // Update ratio and image alpha as needed
+            UpdatePresentationEffect(ease, luminanceMixing, stillness);
         }
+    }
 
-        else if (presentationOption == PresentationOption.LuminanceMixing)
+    void UpdatePresentationEffect(float ease, bool luminanceMixing, bool stillness)
+    {
+        if (luminanceMixing)
         {
-            camMain.GetComponent<Camera>().enabled = false;
-            camLeft.GetComponent<Camera>().enabled = true;
-            camRight.GetComponent<Camera>().enabled = true;
-            ImageMid.SetActive(false);
-            ImageLeft.SetActive(true);
-            ImageRight.SetActive(true);
-
-            elapsedTime += Time.deltaTime * speed;
-            int currentLoopPhase = Mathf.FloorToInt(elapsedTime / 2f);  // Full cycle: 2 seconds
-            if (currentLoopPhase > previousLoopPhase)
-            {
-                loopCount++;
-                previousLoopPhase = currentLoopPhase;
-            }
-
-            float t = elapsedTime % 2f;
-            float ease = CalculatePos(t);
-            Vector3 pos = leftLimit + moveDir * (distance * ease);
-            camMain.transform.position = pos;
-
-            ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+            ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position)
+                    / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+            
             ratio = ratio * amplitude;
+            var imgRight = ImageRight.GetComponent<RawImage>();
+            Color cRight = imgRight.color;
+            cRight.a = Mathf.Clamp01(ratio);
+            imgRight.color = cRight;
 
-            var img = ImageRight.GetComponent<RawImage>();
-            Color c = img.color;
-            c.a = Mathf.Clamp01(ratio);
-            img.color = c;
+            //float leftRatio = ratio * amplitude;
+            //float rightRatio = (1.0f - ratio) * amplitude;
+
+            //// Left image
+            //var imgLeft = ImageLeft.GetComponent<RawImage>();
+            //Color cLeft = imgLeft.color;
+            //cLeft.a = Mathf.Clamp01(leftRatio);
+            //imgLeft.color = cLeft;
+
+            // Right image
+            //var imgRight = ImageRight.GetComponent<RawImage>();
+            //Color cRight = imgRight.color;
+            //cRight.a = Mathf.Clamp01(rightRatio);
+            //imgRight.color = cRight;
         }
-
-        else if (presentationOption == PresentationOption.Stillness)
+        else if (stillness)
         {
-            camMain.GetComponent<Camera>().enabled = true;
-            camLeft.GetComponent<Camera>().enabled = true;
-            camRight.GetComponent<Camera>().enabled = true;
-            ImageMid.SetActive(true);
-            ImageLeft.SetActive(true);
-            ImageRight.SetActive(true);
-
-            elapsedTime += Time.deltaTime * speed;
-            int currentLoopPhase = Mathf.FloorToInt(elapsedTime / 2f);  // Full cycle: 2 seconds
-            if (currentLoopPhase > previousLoopPhase)
-            {
-                loopCount++;
-                previousLoopPhase = currentLoopPhase;
-            }
-
-            float t = elapsedTime % 2f;
-            float ease = CalculatePos(t);
-            Vector3 pos = leftLimit + moveDir * (distance * ease);
-            camMain.transform.position = pos;
-
             float totalDistance = Vector3.Distance(camLeft.transform.position, camRight.transform.position);
             ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / totalDistance;
 
-            float leftRatio = ratio;
-            float rightRatio = 1.0f - ratio;
+            float leftRatio = ratio * amplitude;
+            float rightRatio = (1.0f - ratio) * amplitude;
 
-            leftRatio *= amplitude;
-            rightRatio *= amplitude;
-
-            // 左侧
+            // Left image
             var imgLeft = ImageLeft.GetComponent<RawImage>();
             Color cLeft = imgLeft.color;
             cLeft.a = Mathf.Clamp01(leftRatio);
             imgLeft.color = cLeft;
 
-            // 右侧
+            // Right image
             var imgRight = ImageRight.GetComponent<RawImage>();
             Color cRight = imgRight.color;
             cRight.a = Mathf.Clamp01(rightRatio);
             imgRight.color = cRight;
-
-
         }
+        // Continuity mode does not require special image effect here
     }
 
     float CalculatePos(float t)
@@ -240,9 +235,23 @@ public class CameraController : MonoBehaviour
         return ease;
     }
 
+    void SetActiveCameras(bool main, bool left, bool right)
+    {
+        camMain.GetComponent<Camera>().enabled = main;
+        camLeft.GetComponent<Camera>().enabled = left;
+        camRight.GetComponent<Camera>().enabled = right;
+    }
+
+    void SetActiveImages(bool mid, bool left, bool right)
+    {
+        if (ImageMid) ImageMid.SetActive(mid);
+        if (ImageLeft) ImageLeft.SetActive(left);
+        if (ImageRight) ImageRight.SetActive(right);
+    }
+
     void OnValidate()
     {
-        amplitude = Mathf.Clamp(amplitude, 0f, 1f); // 保证 amplitude 始终在 0~1 之间
+        amplitude = Mathf.Clamp(amplitude, 0f, 1f); // Keep amplitude in [0,1]
     }
 
     void OnDrawGizmos()
