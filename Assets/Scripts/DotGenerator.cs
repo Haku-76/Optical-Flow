@@ -4,6 +4,7 @@ using System.Collections.Generic;
 public class DotGenerator : MonoBehaviour
 {
     public GameObject cam;
+    public bool isSphere = true; // true: Sphere, false: Cube
 
     [Space(15)]
     public float areaWidth;   // X轴范围
@@ -42,7 +43,7 @@ public class DotGenerator : MonoBehaviour
             bool tooClose = false;
             foreach (var pos in dotPositions)
             {
-                if (Vector2.Distance(pos, candidate) < dotRadius * 2f)
+                if (Vector2.Distance(pos, candidate) < dotRadius * 5f)
                 {
                     tooClose = true;
                     break;
@@ -61,12 +62,14 @@ public class DotGenerator : MonoBehaviour
 
     void CreateDot(Vector3 position)
     {
-        GameObject sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-        sphere.transform.position = transform.position + position;
-        sphere.transform.localScale = Vector3.one * dotRadius * 2f;
-        sphere.transform.parent = this.transform;
+        // 根据isSphere变量决定使用球还是立方体
+        PrimitiveType type = isSphere ? PrimitiveType.Sphere : PrimitiveType.Cube;
+        GameObject dotObj = GameObject.CreatePrimitive(type);
+        dotObj.transform.position = transform.position + position;
+        dotObj.transform.localScale = Vector3.one * dotRadius * 2f;
+        dotObj.transform.parent = this.transform;
 
-        var renderer = sphere.GetComponent<Renderer>();
+        var renderer = dotObj.GetComponent<Renderer>();
         if (renderer != null)
         {
             renderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;

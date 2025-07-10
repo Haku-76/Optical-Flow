@@ -221,12 +221,12 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 30805985}
   serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 21}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 1}
   m_LocalScale: {x: 50, y: 25, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 0}
+  m_Father: {fileID: 129581992}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &129581991
 GameObject:
@@ -239,7 +239,7 @@ GameObject:
   - component: {fileID: 129581992}
   - component: {fileID: 129581993}
   m_Layer: 0
-  m_Name: Dots
+  m_Name: 3D Dots
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -257,7 +257,8 @@ Transform:
   m_LocalPosition: {x: 0, y: 0, z: 20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
-  m_Children: []
+  m_Children:
+  - {fileID: 30805989}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &129581993
@@ -273,11 +274,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cam: {fileID: 1670714672}
-  areaWidth: 50
-  areaHeight: 25
+  isSphere: 0
+  areaWidth: 32
+  areaHeight: 18
   seed: 0
   dotRadius: 0.1
-  dotDensity: 0.25
+  dotDensity: 1
 --- !u!1 &433378293
 GameObject:
   m_ObjectHideFlags: 0
@@ -734,7 +736,7 @@ MonoBehaviour:
   ImageRight: {fileID: 1425571310}
   motionOption: 0
   presentationOption: 2
-  distance: 0.25
+  distance: 0.15
   speed: 1
   amplitude: 1
   ratio: 0
@@ -856,7 +858,7 @@ GameObject:
   - component: {fileID: 1354295638}
   - component: {fileID: 1354295637}
   m_Layer: 6
-  m_Name: Dots
+  m_Name: 2D Dots
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -912,7 +914,7 @@ Canvas:
   m_Enabled: 1
   serializedVersion: 3
   m_RenderMode: 2
-  m_Camera: {fileID: 0}
+  m_Camera: {fileID: 1670714675}
   m_PlaneDistance: 1
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
@@ -933,9 +935,9 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1354295636}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 6.764}
+  m_LocalPosition: {x: 0, y: 0, z: 20}
   m_LocalScale: {x: 0.0008018754, y: 0.0008018754, z: 0.0008018754}
-  m_ConstrainProportionsScale: 0
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1370102427}
   m_Father: {fileID: 0}
@@ -972,9 +974,9 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1370102426}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 1766}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 16, y: 16, z: 16}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 1354295640}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1030,11 +1032,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 061cf45f5b948a24baf024952bf855e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  isCircle: 0
   textureWidth: 2560
   textureHeight: 1440
   randomSeed: 1
-  dotRadius: 100
-  dotDensity: 0.0002
+  dotRadius: 8
+  dotDensity: 0.00015
 --- !u!1 &1425571310
 GameObject:
   m_ObjectHideFlags: 0
@@ -1482,6 +1485,7 @@ MonoBehaviour:
   cameraController: {fileID: 1198509475}
   participant: P01
   trial: T01
+  presentationOption: 
 --- !u!1 &2139579243
 GameObject:
   m_ObjectHideFlags: 0
@@ -1555,7 +1559,6 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1277408678}
-  - {fileID: 30805989}
   - {fileID: 129581992}
   - {fileID: 496128182}
   - {fileID: 1354295640}

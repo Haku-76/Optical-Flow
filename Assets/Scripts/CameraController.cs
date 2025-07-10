@@ -68,6 +68,24 @@ public class CameraController : MonoBehaviour
         camLeft.transform.position = leftLimit;
         camRight.transform.position = rightLimit;
 
+        switch (presentationOption)
+        {
+            case PresentationOption.Continuity:
+                SetActiveCameras(true, false, false);
+                SetActiveImages(true, false, false);
+                break;
+
+            case PresentationOption.LuminanceMixing:
+                SetActiveCameras(false, true, true);
+                SetActiveImages(false, true, true);
+                break;
+
+            case PresentationOption.Stillness:
+                SetActiveCameras(true, true, true);
+                SetActiveImages(true, true, true);
+                break;
+        }
+
         folder = Path.Combine("Screenshots", motionOption.ToString(), presentationOption.ToString());
         if (!Directory.Exists(folder))
         {
@@ -82,20 +100,14 @@ public class CameraController : MonoBehaviour
         switch (presentationOption)
         {
             case PresentationOption.Continuity:
-                SetActiveCameras(true, false, false);
-                SetActiveImages(true, false, false);
                 HandleMode(continuity: true);
                 break;
 
             case PresentationOption.LuminanceMixing:
-                SetActiveCameras(false, true, true);
-                SetActiveImages(false, true, true);
                 HandleMode(luminanceMixing: true);
                 break;
 
             case PresentationOption.Stillness:
-                SetActiveCameras(true, true, true);
-                SetActiveImages(true, true, true);
                 HandleMode(stillness: true);
                 break;
         }
@@ -153,32 +165,40 @@ public class CameraController : MonoBehaviour
         {
             ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position)
                     / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
-            
-            ratio = ratio * amplitude;
-            var imgRight = ImageRight.GetComponent<RawImage>();
-            Color cRight = imgRight.color;
-            cRight.a = Mathf.Clamp01(ratio);
-            imgRight.color = cRight;
 
-            //float leftRatio = ratio * amplitude;
-            //float rightRatio = (1.0f - ratio) * amplitude;
 
-            //// Left image
-            //var imgLeft = ImageLeft.GetComponent<RawImage>();
-            //Color cLeft = imgLeft.color;
-            //cLeft.a = Mathf.Clamp01(leftRatio);
-            //imgLeft.color = cLeft;
-
-            // Right image
+            //ratio = ratio * amplitude;
             //var imgRight = ImageRight.GetComponent<RawImage>();
             //Color cRight = imgRight.color;
-            //cRight.a = Mathf.Clamp01(rightRatio);
+            //cRight.a = Mathf.Clamp01(ratio);
             //imgRight.color = cRight;
+
+            //var imgLeft = ImageLeft.GetComponent<RawImage>();
+            //Color cLeft = imgLeft.color;
+            //cLeft.a = amplitude;
+            //imgLeft.color = cLeft;
+
+
+            float rightRatio = ratio * amplitude;
+            float leftRatio = (1.0f - ratio) * amplitude;
+
+            // Left image
+            var imgLeft = ImageLeft.GetComponent<RawImage>();
+            Color cLeft = imgLeft.color;
+            cLeft.a = Mathf.Clamp01(leftRatio);
+            imgLeft.color = cLeft;
+
+            //Right image
+            var imgRight = ImageRight.GetComponent<RawImage>();
+            Color cRight = imgRight.color;
+            cRight.a = Mathf.Clamp01(rightRatio);
+            imgRight.color = cRight;
         }
         else if (stillness)
         {
             float totalDistance = Vector3.Distance(camLeft.transform.position, camRight.transform.position);
             ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / totalDistance;
+            ratio = Mathf.Clamp(ratio, 0.05f, 0.95f);
 
             float leftRatio = ratio * amplitude;
             float rightRatio = (1.0f - ratio) * amplitude;
@@ -195,7 +215,6 @@ public class CameraController : MonoBehaviour
             cRight.a = Mathf.Clamp01(rightRatio);
             imgRight.color = cRight;
         }
-        // Continuity mode does not require special image effect here
     }
 
     float CalculatePos(float t)
