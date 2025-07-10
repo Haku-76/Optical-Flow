@@ -163,9 +163,17 @@ public class CameraController : MonoBehaviour
     {
         if (luminanceMixing)
         {
-            ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position)
-                    / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+            //ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position)
+            //        / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
 
+            float baseRatio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+            ratio = Mathf.Lerp(0.5f, baseRatio, amplitude);
+
+            //float rightRatio = ratio * amplitude;
+            //float leftRatio = (1.0f - ratio) * amplitude;
+
+            float rightRatio = ratio;
+            float leftRatio = 1.0f - ratio;
 
             //ratio = ratio * amplitude;
             //var imgRight = ImageRight.GetComponent<RawImage>();
@@ -177,10 +185,6 @@ public class CameraController : MonoBehaviour
             //Color cLeft = imgLeft.color;
             //cLeft.a = amplitude;
             //imgLeft.color = cLeft;
-
-
-            float rightRatio = ratio * amplitude;
-            float leftRatio = (1.0f - ratio) * amplitude;
 
             // Left image
             var imgLeft = ImageLeft.GetComponent<RawImage>();
@@ -196,12 +200,18 @@ public class CameraController : MonoBehaviour
         }
         else if (stillness)
         {
-            float totalDistance = Vector3.Distance(camLeft.transform.position, camRight.transform.position);
-            ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / totalDistance;
+            //float totalDistance = Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+            //ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / totalDistance;
+
+            float baseRatio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+            ratio = Mathf.Lerp(0.5f, baseRatio, amplitude);
             ratio = Mathf.Clamp(ratio, 0.05f, 0.95f);
 
-            float leftRatio = ratio * amplitude;
-            float rightRatio = (1.0f - ratio) * amplitude;
+            //float leftRatio = ratio * amplitude;
+            //float rightRatio = (1.0f - ratio) * amplitude;
+
+            float rightRatio = ratio;
+            float leftRatio = 1.0f - ratio;
 
             // Left image
             var imgLeft = ImageLeft.GetComponent<RawImage>();
