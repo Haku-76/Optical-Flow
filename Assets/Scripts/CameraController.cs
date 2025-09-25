@@ -1,6 +1,8 @@
 ﻿using UnityEngine;
 using System.IO;
 using UnityEngine.UI;
+using static CameraController;
+using static UnityEditor.PlayerSettings;
 
 public class CameraController : MonoBehaviour
 {
@@ -18,6 +20,12 @@ public class CameraController : MonoBehaviour
         Stillness
     }
 
+    public enum Mode
+    {
+        First,
+        Second
+    }
+
     public SerialReader serialReader;
 
     [Space(15)]
@@ -31,6 +39,7 @@ public class CameraController : MonoBehaviour
     [Space(15)]
     public MotionOption motionOption = MotionOption.Linear;
     public PresentationOption presentationOption = PresentationOption.Continuity;
+    public Mode mode = Mode.First;
 
     [Space(15)]
     public float distance = 0.01f;
@@ -61,10 +70,11 @@ public class CameraController : MonoBehaviour
     {
         centerPos = camMain.transform.position;
         moveDir = camMain.transform.right.normalized;
+        //moveDir = camMain.transform.forward.normalized;
         leftLimit = centerPos - moveDir * (distance / 2.0f);
         rightLimit = centerPos + moveDir * (distance / 2.0f);
 
-        camMain.transform.position = leftLimit;
+        //camMain.transform.position = leftLimit;
         camLeft.transform.position = leftLimit;
         camRight.transform.position = rightLimit;
 
@@ -95,7 +105,7 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        amplitude = (serialReader != null && serialReader.enabled) ? serialReader.value : 1.0f;
+        //amplitude = (serialReader != null && serialReader.enabled) ? serialReader.value : 1.0f;
 
         switch (presentationOption)
         {
@@ -151,9 +161,23 @@ public class CameraController : MonoBehaviour
 
             float t = elapsedTime % 2f;
             float ease = CalculatePos(t);
+            ease = Mathf.Lerp(0.2f, 0.8f, ease);
             Vector3 pos = leftLimit + moveDir * (distance * ease);
-            camMain.transform.position = pos;
 
+            switch (mode)
+            {
+                case Mode.First:
+                    camMain.transform.position = pos;
+                    break;
+                case Mode.Second:
+                    //camLeft.transform.position = new Vector3(pos.x - distance / 2.0f, pos.y, pos.z);
+                    //camRight.transform.position = new Vector3(pos.x + distance / 2.0f, pos.y, pos.z);
+
+                    camLeft.transform.position = new Vector3(pos.x - distance / 2.0f, pos.y, pos.z);
+                    camRight.transform.position = new Vector3(pos.x + distance / 2.0f, pos.y, pos.z);
+                    break;
+            }
+     
             // Update ratio and image alpha as needed
             UpdatePresentationEffect(ease, luminanceMixing, stillness);
         }
@@ -163,28 +187,11 @@ public class CameraController : MonoBehaviour
     {
         if (luminanceMixing)
         {
-            //ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position)
-            //        / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
-
             ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
-            //ratio = Mathf.Lerp(0.5f, baseRatio, amplitude);
+            ratio = Mathf.Lerp(0.5f, ratio, amplitude);
 
-            //float rightRatio = ratio * amplitude;
-            //float leftRatio = (1.0f - ratio) * amplitude;
-
-            float rightRatio = ratio;
+            float rightRatio = Mathf.Clamp01(ratio);
             float leftRatio = 1.0f - ratio;
-
-            //ratio = ratio * amplitude;
-            //var imgRight = ImageRight.GetComponent<RawImage>();
-            //Color cRight = imgRight.color;
-            //cRight.a = Mathf.Clamp01(ratio);
-            //imgRight.color = cRight;
-
-            //var imgLeft = ImageLeft.GetComponent<RawImage>();
-            //Color cLeft = imgLeft.color;
-            //cLeft.a = amplitude;
-            //imgLeft.color = cLeft;
 
             //Left image
             //var imgLeft = ImageLeft.GetComponent<RawImage>();
@@ -195,34 +202,36 @@ public class CameraController : MonoBehaviour
             //Right image
             var imgRight = ImageRight.GetComponent<RawImage>();
             Color cRight = imgRight.color;
-            cRight.a = Mathf.Clamp01(rightRatio);
+            cRight.a = rightRatio;
             imgRight.color = cRight;
         }
         else if (stillness)
         {
-            //float totalDistance = Vector3.Distance(camLeft.transform.position, camRight.transform.position);
-            //ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / totalDistance;
+            switch (mode)
+            {
+                case Mode.First:
+                    ratio = Vector3.Distance(camRight.transform.position, camMain.transform.position) / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+                    break;
+                case Mode.Second:
+                    ratio = Vector3.Distance(camLeft.transform.position, camMain.transform.position) / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
+                    break;
+            }
 
-            ratio = Vector3.Distance(camRight.transform.position, camMain.transform.position) / Vector3.Distance(camLeft.transform.position, camRight.transform.position);
-            //ratio = Mathf.Lerp(0.5f, baseRatio, amplitude);
-            //ratio = Mathf.Clamp(ratio, 0.05f, 0.95f);
+            ratio = Mathf.Lerp(0.5f, ratio, amplitude);
 
-            //float leftRatio = ratio * amplitude;
-            //float rightRatio = (1.0f - ratio) * amplitude;
-
-            float rightRatio = ratio;
+            float rightRatio = Mathf.Clamp01(ratio);
             float leftRatio = 1.0f - ratio;
 
             // Left image
             var imgLeft = ImageLeft.GetComponent<RawImage>();
             Color cLeft = imgLeft.color;
-            cLeft.a = Mathf.Clamp01(leftRatio);
+            cLeft.a = leftRatio;
             imgLeft.color = cLeft;
 
-            // Right image
+            //Right image
             var imgRight = ImageRight.GetComponent<RawImage>();
             Color cRight = imgRight.color;
-            cRight.a = Mathf.Clamp01(rightRatio);
+            cRight.a = rightRatio;
             imgRight.color = cRight;
         }
     }
