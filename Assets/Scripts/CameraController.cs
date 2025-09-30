@@ -35,6 +35,7 @@ public class CameraController : MonoBehaviour
     public GameObject ImageMid;
     public GameObject ImageLeft;
     public GameObject ImageRight;
+    public GameObject Blank;
 
     [Space(15)]
     public MotionOption motionOption = MotionOption.Linear;
@@ -105,7 +106,7 @@ public class CameraController : MonoBehaviour
 
     void Update()
     {
-        //amplitude = (serialReader != null && serialReader.enabled) ? serialReader.value : 1.0f;
+        amplitude = (serialReader != null && serialReader.enabled) ? serialReader.value : 1.0f;
 
         switch (presentationOption)
         {
@@ -161,21 +162,25 @@ public class CameraController : MonoBehaviour
 
             float t = elapsedTime % 2f;
             float ease = CalculatePos(t);
-            ease = Mathf.Lerp(0.2f, 0.8f, ease);
+            //ease = Mathf.Lerp(0.1f, 0.9f, ease);
             Vector3 pos = leftLimit + moveDir * (distance * ease);
 
-            switch (mode)
+            if (presentationOption == PresentationOption.LuminanceMixing)
             {
-                case Mode.First:
-                    camMain.transform.position = pos;
-                    break;
-                case Mode.Second:
-                    //camLeft.transform.position = new Vector3(pos.x - distance / 2.0f, pos.y, pos.z);
-                    //camRight.transform.position = new Vector3(pos.x + distance / 2.0f, pos.y, pos.z);
-
-                    camLeft.transform.position = new Vector3(pos.x - distance / 2.0f, pos.y, pos.z);
-                    camRight.transform.position = new Vector3(pos.x + distance / 2.0f, pos.y, pos.z);
-                    break;
+                camMain.transform.position = pos;
+            }
+            else if (presentationOption == PresentationOption.Stillness)
+            {
+                switch (mode)
+                {
+                    case Mode.First:
+                        camMain.transform.position = pos;
+                        break;
+                    case Mode.Second:
+                        camLeft.transform.position = new Vector3(pos.x - distance / 2.0f, pos.y, pos.z);
+                        camRight.transform.position = new Vector3(pos.x + distance / 2.0f, pos.y, pos.z);
+                        break;
+                }
             }
      
             // Update ratio and image alpha as needed
@@ -204,6 +209,7 @@ public class CameraController : MonoBehaviour
             Color cRight = imgRight.color;
             cRight.a = rightRatio;
             imgRight.color = cRight;
+
         }
         else if (stillness)
         {
@@ -223,16 +229,18 @@ public class CameraController : MonoBehaviour
             float leftRatio = 1.0f - ratio;
 
             // Left image
-            var imgLeft = ImageLeft.GetComponent<RawImage>();
-            Color cLeft = imgLeft.color;
-            cLeft.a = leftRatio;
-            imgLeft.color = cLeft;
+            //var imgLeft = ImageLeft.GetComponent<RawImage>();
+            //Color cLeft = imgLeft.color;
+            //cLeft.a = leftRatio;
+            //imgLeft.color = cLeft;
 
             //Right image
             var imgRight = ImageRight.GetComponent<RawImage>();
             Color cRight = imgRight.color;
             cRight.a = rightRatio;
             imgRight.color = cRight;
+
+            //UpdateBlankByRatio();
         }
     }
 
@@ -285,6 +293,18 @@ public class CameraController : MonoBehaviour
         if (ImageMid) ImageMid.SetActive(mid);
         if (ImageLeft) ImageLeft.SetActive(left);
         if (ImageRight) ImageRight.SetActive(right);
+    }
+
+    void UpdateBlankByRatio()
+    {
+        if (!Blank) return;
+
+        // 使用夹紧后的 ratio 判定更稳妥
+        float r = Mathf.Clamp01(ratio);
+        bool turnOn = (r <= 0.1f) || (r >= 0.9f);
+
+        if (Blank.activeSelf != turnOn)
+            Blank.SetActive(turnOn);
     }
 
     void OnValidate()

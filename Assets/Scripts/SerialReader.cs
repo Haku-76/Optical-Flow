@@ -61,14 +61,21 @@ public class SerialReader : MonoBehaviour
     void Update()
     {
         rawValue = latestRawValue;
-        if (rawValue < threshold)
-        {
-            value = 0f;
-        }
-        else
-        {
-            value = Mathf.Clamp01((rawValue - threshold) / (float)(maxValue - threshold));
-        }
+
+        float mapped;
+        if (rawValue < threshold) mapped = 0f;
+        else mapped = Mathf.Clamp01((rawValue - threshold) / (float)(maxValue - threshold));
+
+        // 指数平滑
+        float alpha = 0.15f;
+        value = Mathf.Lerp(value, mapped, alpha);
+
+        // 如果目标是 0 或 1，而且已经很接近，就直接钉到 0/1
+        if (mapped == 0f && value < 0.05f) value = 0f;
+        if (mapped == 1f && value > 0.95f) value = 1f;
+
+        // 保留两位小数
+        value = (float)System.Math.Round(value, 2);
     }
 
     void OnApplicationQuit()
