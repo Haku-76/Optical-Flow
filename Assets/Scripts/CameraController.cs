@@ -92,8 +92,8 @@ public class CameraController : MonoBehaviour
                 break;
 
             case PresentationOption.Stillness:
-                SetActiveCameras(true, true, true);
-                SetActiveImages(true, true, true);
+                SetActiveCameras(false, true, true);
+                SetActiveImages(false, true, true);
                 break;
         }
 
