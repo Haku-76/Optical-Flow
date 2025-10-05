@@ -8,6 +8,7 @@ public class DataSaver : MonoBehaviour
     public string participant = "P01";
     public string trial = "T01";
     public string presentationOption;
+    public string experiment;
 
     private string path;
     private bool headerWritten = false;
@@ -16,13 +17,14 @@ public class DataSaver : MonoBehaviour
     void Start()
     {
         presentationOption = cameraController.presentationOption.ToString();
+        experiment = cameraController.experiment.ToString();
 
         string folder = Path.Combine(Application.dataPath, "Data");
         if (!Directory.Exists(folder))
         {
             Directory.CreateDirectory(folder);
         }
-        string filename = $"{participant}_{presentationOption}_{trial}.csv";
+        string filename = $"{participant}_{presentationOption}_{experiment}_{trial}.csv";
         path = Path.Combine(folder, filename);
 
         // 检查文件是否已存在header

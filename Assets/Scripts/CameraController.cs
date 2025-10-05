@@ -1,8 +1,8 @@
 ﻿using UnityEngine;
 using System.IO;
 using UnityEngine.UI;
-using static CameraController;
-using static UnityEditor.PlayerSettings;
+using TMPro;
+using static System.Net.Mime.MediaTypeNames;
 
 public class CameraController : MonoBehaviour
 {
@@ -26,6 +26,13 @@ public class CameraController : MonoBehaviour
         Second
     }
 
+    public enum Experiment
+    {
+        Experiment_1,
+        Experiment_2,
+        Experiment_3
+    }
+
     public SerialReader serialReader;
 
     [Space(15)]
@@ -36,17 +43,19 @@ public class CameraController : MonoBehaviour
     public GameObject ImageLeft;
     public GameObject ImageRight;
     public GameObject Blank;
+    public TextMeshProUGUI InfoAmplitude;
+    public TextMeshProUGUI InfoRatio;
 
     [Space(15)]
     public MotionOption motionOption = MotionOption.Linear;
     public PresentationOption presentationOption = PresentationOption.Continuity;
     public Mode mode = Mode.First;
+    public Experiment experiment = Experiment.Experiment_1;
 
     [Space(15)]
     public float distance = 0.01f;
     public float speed = 1.0f;
-    [Range(0f, 1f)]
-    public float amplitude = 1.0f;
+    [Range(-1.0f, 1.0f)] public float amplitude = 1.0f;
     public float ratio = 0.0f;
 
     [Space(15)]
@@ -71,11 +80,10 @@ public class CameraController : MonoBehaviour
     {
         centerPos = camMain.transform.position;
         moveDir = camMain.transform.right.normalized;
-        //moveDir = camMain.transform.forward.normalized;
+
         leftLimit = centerPos - moveDir * (distance / 2.0f);
         rightLimit = centerPos + moveDir * (distance / 2.0f);
 
-        //camMain.transform.position = leftLimit;
         camLeft.transform.position = leftLimit;
         camRight.transform.position = rightLimit;
 
@@ -163,6 +171,7 @@ public class CameraController : MonoBehaviour
             float t = elapsedTime % 2f;
             float ease = CalculatePos(t);
             //ease = Mathf.Lerp(0.1f, 0.9f, ease);
+
             Vector3 pos = leftLimit + moveDir * (distance * ease);
 
             if (presentationOption == PresentationOption.LuminanceMixing)
@@ -223,7 +232,36 @@ public class CameraController : MonoBehaviour
                     break;
             }
 
-            ratio = Mathf.Lerp(0.5f, ratio, amplitude);
+            switch (experiment)
+            {
+                //amplitude的初始范围是0-1
+                case Experiment.Experiment_1:
+                    //amplitude的范围是-1-0
+                    amplitude = amplitude - 1.0f;
+                    ratio = (1 + amplitude) * ratio;
+                    break;
+                case Experiment.Experiment_2:
+                    //amplitude的范围是0-1
+                    ratio = (1 - amplitude) * ratio + (0.5f * amplitude);
+                    break;
+                case Experiment.Experiment_3:
+                    //amplitude的范围是-1-1
+                    amplitude = (amplitude - 0.5f) * 2.0f;
+                    if (amplitude < 0)
+                    {
+                        ratio = (1 + amplitude) * ratio;
+                    }
+                    else if(amplitude >= 0)
+                    {
+                        ratio = (1 - amplitude) * ratio + (0.5f * amplitude);
+                    }
+                    break;
+            }
+
+            InfoAmplitude.text = "Amplitude:" + amplitude;
+            InfoRatio.text = "Ratio:" + ratio;
+
+            //ratio = Mathf.Lerp(0.5f, ratio, amplitude);
 
             float rightRatio = Mathf.Clamp01(ratio);
             float leftRatio = 1.0f - ratio;
@@ -239,8 +277,6 @@ public class CameraController : MonoBehaviour
             Color cRight = imgRight.color;
             cRight.a = rightRatio;
             imgRight.color = cRight;
-
-            //UpdateBlankByRatio();
         }
     }
 
@@ -293,23 +329,6 @@ public class CameraController : MonoBehaviour
         if (ImageMid) ImageMid.SetActive(mid);
         if (ImageLeft) ImageLeft.SetActive(left);
         if (ImageRight) ImageRight.SetActive(right);
-    }
-
-    void UpdateBlankByRatio()
-    {
-        if (!Blank) return;
-
-        // 使用夹紧后的 ratio 判定更稳妥
-        float r = Mathf.Clamp01(ratio);
-        bool turnOn = (r <= 0.1f) || (r >= 0.9f);
-
-        if (Blank.activeSelf != turnOn)
-            Blank.SetActive(turnOn);
-    }
-
-    void OnValidate()
-    {
-        amplitude = Mathf.Clamp(amplitude, 0f, 1f); // Keep amplitude in [0,1]
     }
 
     void OnDrawGizmos()
